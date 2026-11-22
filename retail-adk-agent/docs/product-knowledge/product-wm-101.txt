@@ -1,0 +1,1 @@
+WM-101 Wireless Mouse is a synthetic POC product. The WM-101 uses a 2.4 GHz USB receiver and takes one AA battery. The WM-101 has a scroll wheel and a compact right-handed shape. For setup, insert the battery and plug the receiver into a USB port.

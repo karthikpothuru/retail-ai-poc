@@ -1,0 +1,67 @@
+{
+  "tools": [
+    {
+      "name": "get_inventory",
+      "description": "Retrieves current inventory details for a retail product, including expected inventory, actual inventory and reorder threshold.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "Unique retail product identifier, for example WM-101."
+          }
+        },
+        "required": ["productId"]
+      },
+      "annotations": {
+        "title": "Get Inventory",
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "get_sales_summary",
+      "description": "Retrieves the sales summary for a product over a specified date range.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "fromDate": {
+            "type": "string",
+            "description": "Start date in YYYY-MM-DD format."
+          },
+          "toDate": {
+            "type": "string",
+            "description": "End date in YYYY-MM-DD format."
+          }
+        },
+        "required": ["productId", "fromDate", "toDate"]
+      },
+      "annotations": {
+        "title": "Get Sales Summary",
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "get_reorder_status",
+      "description": "Checks whether available stock has reached its reorder threshold. Does not place an order.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          }
+        },
+        "required": ["productId"]
+      },
+      "annotations": {
+        "title": "Get Reorder Status",
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    }
+  ]
+}

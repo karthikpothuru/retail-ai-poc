@@ -1,0 +1,1 @@
+KB-201 Mechanical Keyboard is a synthetic POC product. The KB-201 connects through a wired USB-C cable and has tactile switches. The KB-201 uses a tenkeyless layout without a numeric keypad. Connect the keyboard to a compatible USB port for desktop typing.

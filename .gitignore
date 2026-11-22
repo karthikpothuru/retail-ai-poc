@@ -1,0 +1,45 @@
+﻿# Java
+target/
+*.class
+*.log
+
+# React / Node
+node_modules/
+dist/
+build/
+coverage/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.env.local
+*.key
+*.pem
+*.p12
+*.pfx
+*credentials*.json
+*service-account*.json
+application-local.properties
+application-local.yml
+application-local.yaml
+
+# Local data and backups
+*.dump
+*.backup
+*.sqlite
+*.db
+
+# OS
+.DS_Store
+Thumbs.db

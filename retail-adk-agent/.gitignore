@@ -1,0 +1,25 @@
+﻿target/
+.idea/
+.vscode/
+*.iml
+
+# Local backups and logs
+migration-backup/
+*.log
+
+# Credentials and environment files
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+service-account*.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local Maven test cache
+.maven-test-cache/
+enterprise-evidence/

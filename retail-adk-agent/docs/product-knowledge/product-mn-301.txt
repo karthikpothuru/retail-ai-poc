@@ -1,0 +1,1 @@
+MN-301 Computer Monitor is a synthetic POC product. The MN-301 has a 24-inch 1920 x 1080 display at 60 Hz. The MN-301 accepts HDMI video input and includes a tilt stand. Connect an HDMI source and select HDMI on the display.
