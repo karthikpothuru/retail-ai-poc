@@ -44,6 +44,34 @@ class PersonalizedRetailAgentTest {
     private final ProductInventoryIntegrationTest.FakeSpring transport = new ProductInventoryIntegrationTest.FakeSpring();
 
     @Test
+    void handlesStandaloneConversationThroughTheAdkRunner() {
+        var model = model();
+        var agent = agent(product(model), null);
+        assertThat(PersonalizedRetailCliRunner.run(agent, "Hi")).startsWith("Hello!");
+        assertThat(agent.answer(" Thanks! ").answer()).startsWith("You're welcome!");
+        assertThat(agent.answer("What can you do?").answer()).contains("documented product features");
+        assertThat(agent.answer("   ").answer()).startsWith("Ask one retail question");
+        assertThat(model.requests).isEmpty();
+    }
+
+    @Test
+    void mixedConversationStillUsesAuthorizedProductEvidence() throws Exception {
+        var model = model(selection(MOUSE, MOUSE_POWER), selection(KEYBOARD, KEYBOARD_LAYOUT),
+                selection(MONITOR, MONITOR_INPUT), selection(MOUSE, "The WM-101 has Bluetooth 5.3."));
+        var agent = agent(product(model, MOUSE, KEYBOARD, MONITOR), null);
+
+        assertThat(agent.answer("Hi, what battery does WM-101 use?").citations())
+                .containsExactly(new PersonalizedRetailAgent.Citation(marker(MOUSE), "PRODUCT"));
+        assertThat(agent.answer("What can you do? What is the layout of KB-201?").citations())
+                .containsExactly(new PersonalizedRetailAgent.Citation(marker(KEYBOARD), "PRODUCT"));
+        assertThat(agent.answer("What video input does MN-301 accept?").citations())
+                .containsExactly(new PersonalizedRetailAgent.Citation(marker(MONITOR), "PRODUCT"));
+        var unsupported = agent.answer("Does WM-101 work with Bluetooth?");
+        assertThat(unsupported.answer()).isEqualTo("Product documentation only. " + DocumentGrounding.insufficient());
+        assertThat(unsupported.citations()).isEmpty();
+    }
+
+    @Test
     void routesRegistrationAndCatalogOnlyQuestionsThroughTheAdkRunner() {
         registration.publish(RegistrationKnowledgeAgent.Topic.REGISTRATION, 0);
         var agent = agent(product(model()), null);

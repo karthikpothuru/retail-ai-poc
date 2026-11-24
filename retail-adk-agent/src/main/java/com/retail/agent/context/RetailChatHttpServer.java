@@ -204,12 +204,17 @@ RetailChatHttpServer(
 
     private Reply reply(DemoCustomerContextClient.SessionCookie cookie, String message) {
         var before = sessions.apply(cookie).orElseThrow(() -> new SessionFailure(false));
-        var result = turn.answer(cookie, message);
+        var conversational = ConversationalIntent.match(message.replace(cookie.value(), "[session removed]"));
+        var result = conversational.map(ConversationalIntent::result)
+                .orElseGet(() -> turn.answer(cookie, message));
         var after = sessions.apply(cookie).orElseThrow(() -> new SessionFailure(true));
         if (!before.customerId().equals(after.customerId()) || !before.selectionId().equals(after.selectionId())
                 || result.personalized() && (!before.personalizationConsent() || !after.personalizationConsent()
                 || !before.consentEpoch().equals(after.consentEpoch()))) {
             throw new SessionFailure(true);
+        }
+        if (conversational.isPresent()) {
+            return new Reply(result.answer(), List.of(), List.of(), List.of(), false, "OK");
         }
         var inventory = result.product().stream().flatMap(product -> product.liveInventoryBySku().values().stream())
                 .sorted(java.util.Comparator.comparing(ProductKnowledgeResponse.InventoryObservation::sku)).toList();
