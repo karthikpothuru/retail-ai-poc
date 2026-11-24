@@ -118,41 +118,12 @@ public record Result(
         }
         // Remove the bound secret before any routing or delegation even if copied into the question.
         String publicQuestion = demoSession == null ? question : question.replace(demoSession.value(), "[session removed]");
+        var conversational = ConversationalIntent.match(publicQuestion);
+        if (conversational.isPresent()) {
+            return conversational.get().result();
+        }
+
         var route = route(RegistrationKnowledgeAgent.sanitize(publicQuestion));
-		
-String normalized = publicQuestion
-        .toLowerCase(Locale.ROOT)
-        .replaceAll("[^a-z0-9 ]", " ")
-        .replaceAll("\\s+", " ")
-        .trim();
-
-boolean capabilitiesQuestion =
-        normalized.contains("what can you help me with")
-        || normalized.contains("what can you do")
-        || normalized.contains("how can you help me")
-        || normalized.contains("your capabilities");
-
-if (capabilitiesQuestion) {
-    String capabilities = """
-            I am a retail shopping assistant.
-
-            I can help you with:
-            - Finding products in the available catalog.
-            - Explaining product details supported by reviewed documentation.
-            - Answering registration and account questions when authorized documentation is available.
-            - Checking inventory through connected inventory services when available.
-
-            Product specifications and inventory availability require trusted evidence.
-            """;
-
-    return new Result(
-            capabilities,
-            Optional.empty(),
-            Optional.empty(),
-            false,
-            List.of(),true);
-}
-
         if (route.registration().isEmpty() && route.product().isEmpty()) {
             return new Result("Ask a registration, product, or inventory question.", Optional.empty(), Optional.empty(), false, List.of());
         }

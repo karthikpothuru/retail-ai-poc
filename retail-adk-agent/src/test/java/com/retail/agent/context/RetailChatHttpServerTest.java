@@ -2,6 +2,8 @@ package com.retail.agent.context;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -22,6 +24,73 @@ class RetailChatHttpServerTest {
     static final String TOKEN = "A".repeat(43);
     private static final String COOKIE = "valid-opaque-session-cookie";
     private final HttpClient http = HttpClient.newHttpClient();
+
+    @ParameterizedTest
+    @CsvSource({"Hi,Hello!", "hello,Hello!", " ' (HEY!) ' ,Hello!", "GOOD MORNING!,Good morning!",
+            "Good afternoon.,Good afternoon!", "Good evening,Good evening!", "Thanks,You're welcome!",
+            "Thank you!,You're welcome!", "Help,I can help you find products",
+            "What can you do?,I can help you find products"})
+    void standaloneConversationUsesTheExistingReplyWithoutDelegation(String message, String expected) throws Exception {
+        var base = ConsentAwareCustomerMemoryTest.synthetic(false);
+        var active = new DemoCustomerContextClient.Snapshot(base.customerId(), base.selectionId(),
+                false, base.consentEpoch(), true, UUID.randomUUID());
+        var sessionChecks = new AtomicInteger();
+        try (var server = new RetailChatHttpServer(0, TOKEN, Duration.ofSeconds(2), cookie -> {
+            sessionChecks.incrementAndGet();
+            return Optional.of(active);
+        }, (cookie, question) -> { throw new AssertionError("Agent construction was attempted"); },
+                request -> { throw new AssertionError("Shadow classification was attempted"); })) {
+            server.start();
+            var reply = send(server, TOKEN, Map.of(), message);
+            assertThat(reply.statusCode()).isEqualTo(200);
+            var body = JSON.readTree(reply.body());
+            assertThat(body.size()).isEqualTo(6);
+            assertThat(body.path("answer").asText()).startsWith(expected);
+            assertThat(body.path("status").asText()).isEqualTo("OK");
+            assertThat(body.path("personalized")).isEqualTo(JSON.getNodeFactory().booleanNode(false));
+            for (String field : List.of("citations", "inventoryObservations", "productSkus")) {
+                assertThat(body.path(field)).isEqualTo(JSON.createArrayNode());
+            }
+            assertThat(sessionChecks).hasValue(2);
+        }
+    }
+
+    @Test
+    void mixedGreetingReachesTheAgentWithTheProductQuestionIntact() throws Exception {
+        var active = ConsentAwareCustomerMemoryTest.synthetic(false);
+        var received = new AtomicReference<String>();
+        try (var server = new RetailChatHttpServer(0, TOKEN, Duration.ofSeconds(2), cookie -> Optional.of(active),
+                (cookie, question) -> {
+                    received.set(question);
+                    return answer(false);
+                })) {
+            server.start();
+            var message = "Hi, what battery does WM-101 use?";
+            assertThat(send(server, TOKEN, Map.of(), message).statusCode()).isEqualTo(200);
+            assertThat(received.get()).isEqualTo(message);
+        }
+    }
+
+    @Test
+    void conversationRequiresAnUnchangedSessionAndStillRejectsBlankInput() throws Exception {
+        var active = ConsentAwareCustomerMemoryTest.synthetic(false);
+        var sessionChecks = new AtomicInteger();
+        try (var server = new RetailChatHttpServer(0, TOKEN, Duration.ofSeconds(2),
+                cookie -> sessionChecks.incrementAndGet() == 2 ? Optional.of(active) : Optional.empty(),
+                (cookie, question) -> { throw new AssertionError("Agent construction was attempted"); })) {
+            server.start();
+            for (String blank : List.of("", "  \t ")) {
+                var invalid = send(server, TOKEN, Map.of(), blank);
+                assertThat(invalid.statusCode()).isEqualTo(400);
+                assertThat(invalid.body()).contains("INVALID_REQUEST");
+            }
+            assertThat(sessionChecks).hasValue(0);
+            assertThat(send(server, TOKEN, Map.of(), "Hi").statusCode()).isEqualTo(403);
+            var changed = send(server, TOKEN, Map.of(), "Hi");
+            assertThat(changed.statusCode()).isEqualTo(409);
+            assertThat(changed.body()).contains("SESSION_CHANGED").doesNotContain("Hello");
+        }
+    }
 
     @Test
     void requiresBridgeSecretAndRejectsForgedIdentityEvenWithTheSecret() throws Exception {

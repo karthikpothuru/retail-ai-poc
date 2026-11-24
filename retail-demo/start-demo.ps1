@@ -33,7 +33,7 @@ function Test-LocalPort {
 if (-not (Test-LocalPort 8091)) {
     Write-Host "Starting Java ADK Bridge..."
 
-    $agentDir = "C:\agent-AI-workspace\retail-adk-agent"
+    $agentDir = "C:\agent-AI-workspace\retail-ai-poc\retail-adk-agent"
 
 # Start ADK Bridge in a separate PowerShell window
 $agentCommand = 'mvn exec:java "-Dexec.mainClass=com.retail.agent.context.RetailChatHttpServer"'
@@ -77,7 +77,7 @@ if (-not (Test-LocalPort 8081)) {
 
     Write-Host "Starting Customer Service..."
 
-    $customerDir = "C:\agent-AI-workspace\retail-customer-service"
+    $customerDir = "C:\agent-AI-workspace\retail-ai-poc\retail-customer-service"
 
     if (-not (Test-Path $customerDir)) {
         throw "Customer Service directory not found: $customerDir"
@@ -121,7 +121,7 @@ if (-not (Test-LocalPort 8080)) {
 
     Write-Host "Starting Inventory MCP..."
 
-    $inventoryDir = "C:\agent-AI-workspace\retail-stock-investigator\retail-inventory-mcp"
+    $inventoryDir = "C:\agent-AI-workspace\retail-ai-poc\retail-stock-investigator\retail-inventory-mcp"
 
     if (-not (Test-Path $inventoryDir)) {
         throw "Inventory MCP directory not found: $inventoryDir"
@@ -171,7 +171,7 @@ if (-not (Test-LocalPort 5173)) {
 
     Write-Host "Starting React Portal..."
 
-    $reactDir = "C:\agent-AI-workspace\retail-customer-web"
+    $reactDir = "C:\agent-AI-workspace\retail-ai-poc\retail-customer-web"
 
     if (-not (Test-Path $reactDir)) {
         throw "React Portal directory not found: $reactDir"
